@@ -2,7 +2,7 @@
 SIMORGH Platform API - Configuration Management
 """
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, List
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -31,19 +31,24 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/simorgh_platform"
 
     # Security
-    secret_key: str = "change-this-secret-key-in-production-min-32-chars"
-    access_token_expire_minutes: int = 30
-    api_key_prefix: str = "sph_"
+    jwt_secret_key: str = "change-this-secret-key-in-production-min-32-chars"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
+    argon2_memory_cost: int = 65536
+    argon2_time_cost: int = 3
+    argon2_parallelism: int = 1
 
-    # AI Providers
-    openai_api_key: Optional[str] = None
-    anthropic_api_key: Optional[str] = None
-    qwen_api_key: Optional[str] = None
-    local_llm_endpoint: Optional[str] = None
+    # AI Providers - OpenAI Compatible
+    default_openai_compatible_base_url: Optional[str] = None
+    default_openai_compatible_api_key: Optional[str] = None
+    
+    # Logical Model Configuration (YAML/JSON string or env var)
+    # Format: {"reasoning": [{"provider": "openai-compatible", "model": "qwen-72b"}], ...}
+    logical_models_config: Optional[str] = None
 
     # Rate Limiting
     rate_limit_requests_per_minute: int = 60
-    rate_limit_ai_requests_per_hour: int = 100
+    rate_limit_requests_per_day: int = 10000
 
     # Logging
     log_level: str = "INFO"

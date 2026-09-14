@@ -1,2 +1,73 @@
-# Documentation and source files only - no build artifacts or dependencies detected
-# No .gitignore rules needed for this project based on the file changes
+```
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env.bak/
+.venv/
+
+# Dependencies
+node_modules/
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+*.env.*
+
+# Coverage reports
+.coverage
+htmlcov/
+.coverage.*
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# PyTest
+.pytest_cache/
+
+# Distribution / packaging
+.landscape.yaml
+.pyre/
+.pytype/
+mypy_cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Security
+ai_usage_log.py
+```

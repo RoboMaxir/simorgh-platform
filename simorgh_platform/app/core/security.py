@@ -1,96 +1,78 @@
 """
-SIMORGH Platform API - Authentication and Authorization
-"""
-import hashlib
-import secrets
-from datetime import datetime, timezone, timedelta
-from typing import Optional
+SIMORGH Platform API - Security Utilities
 
-from jose import jwt, JWTError
-from passlib.context import CryptContext
+Handles password hashing, JWT token creation/validation.
+"""
+import jwt
+from datetime import datetime, timezone, timedelta
+from typing import Optional, Dict, Any
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError, InvalidHash
 
 from app.config import get_settings
-from app.core.exceptions import AuthenticationError, AuthorizationError
-
 
 settings = get_settings()
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# JWT settings
-ALGORITHM = "HS256"
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+# Argon2 hasher with configured parameters
+password_hasher = PasswordHasher(
+    memory_cost=settings.argon2_memory_cost,
+    time_cost=settings.argon2_time_cost,
+    parallelism=settings.argon2_parallelism,
+)
 
 
-def get_password_hash(password: str) -> str:
-    """Hash a password."""
-    return pwd_context.hash(password)
+def hash_secret(secret: str) -> str:
+    """Hash a secret using Argon2."""
+    return password_hasher.hash(secret)
 
 
-def generate_api_key() -> str:
-    """Generate a secure API key with prefix."""
-    random_part = secrets.token_urlsafe(32)
-    return f"{settings.api_key_prefix}{random_part}"
-
-
-def hash_api_key(api_key: str) -> str:
-    """Hash an API key for storage."""
-    return hashlib.sha256(api_key.encode()).hexdigest()
-
-
-def verify_api_key(plain_key: str, hashed_key: str) -> bool:
-    """Verify an API key against its hash."""
-    return hash_api_key(plain_key) == hashed_key
+def verify_secret(secret: str, secret_hash: str) -> bool:
+    """Verify a secret against its hash."""
+    try:
+        password_hasher.verify(secret_hash, secret)
+        return True
+    except (VerifyMismatchError, InvalidHash):
+        return False
 
 
 def create_access_token(
-    subject: str,
-    tenant_id: str,
-    application_id: str,
-    scopes: list[str],
+    data: Dict[str, Any],
     expires_delta: Optional[timedelta] = None,
 ) -> str:
-    """Create a JWT access token with tenant and application context."""
-    expire = datetime.now(timezone.utc) + (
-        expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
-    )
+    """Create a JWT access token."""
+    to_encode = data.copy()
     
-    to_encode = {
-        "sub": subject,
-        "tenant_id": tenant_id,
-        "application_id": application_id,
-        "scopes": scopes,
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.access_token_expire_minutes
+        )
+    
+    to_encode.update({
         "exp": expire,
         "iat": datetime.now(timezone.utc),
-    }
+    })
     
-    return jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode,
+        settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
+    )
+    
+    return encoded_jwt
 
 
-def decode_access_token(token: str) -> dict:
+def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
     """Decode and validate a JWT access token."""
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret_key,
+            algorithms=[settings.jwt_algorithm],
+        )
         return payload
-    except JWTError as e:
-        raise AuthenticationError(f"Invalid token: {str(e)}")
-
-
-def verify_scope(required_scope: str, granted_scopes: list[str]) -> bool:
-    """Verify if a required scope is in the granted scopes."""
-    if not granted_scopes:
-        return False
-    
-    # Check for exact match or wildcard
-    return required_scope in granted_scopes or "*" in granted_scopes
-
-
-def require_scope(required_scope: str, granted_scopes: list[str]) -> None:
-    """Require a specific scope, raise AuthorizationError if not present."""
-    if not verify_scope(required_scope, granted_scopes):
-        raise AuthorizationError(f"Missing required scope: {required_scope}")
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None

@@ -1,39 +1,70 @@
 """
 SIMORGH Platform API - AI Provider Base Interface
 
-Abstract base class for all AI provider implementations.
+Abstract base class for all AI providers.
 """
 from abc import ABC, abstractmethod
-from typing import Optional, Any
-from dataclasses import dataclass
+from typing import List, Dict, Any, Optional
 
 
-@dataclass
 class ChatMessage:
-    """Chat message for provider communication."""
-    role: str
-    content: str
+    """Standardized chat message."""
+    
+    def __init__(self, role: str, content: str):
+        self.role = role
+        self.content = content
 
 
-@dataclass
 class ChatResponse:
-    """Standardized chat response from provider."""
-    content: str
-    model: str
-    input_tokens: int
-    output_tokens: int
-    total_tokens: int
-    latency_ms: int
-    raw_response: Any
+    """Standardized chat response."""
+    
+    def __init__(
+        self,
+        content: str,
+        model: str,
+        provider: str,
+        input_tokens: int,
+        output_tokens: int,
+        total_tokens: int,
+        finish_reason: Optional[str] = None,
+        latency_ms: Optional[int] = None,
+    ):
+        self.content = content
+        self.model = model
+        self.provider = provider
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+        self.total_tokens = total_tokens
+        self.finish_reason = finish_reason
+        self.latency_ms = latency_ms
 
 
-@dataclass
 class EmbeddingsResponse:
-    """Standardized embeddings response from provider."""
-    embeddings: list[list[float]]
-    model: str
-    input_tokens: int
-    latency_ms: int
+    """Standardized embeddings response."""
+    
+    def __init__(
+        self,
+        embeddings: List[List[float]],
+        model: str,
+        provider: str,
+        total_tokens: int,
+        latency_ms: Optional[int] = None,
+    ):
+        self.embeddings = embeddings
+        self.model = model
+        self.provider = provider
+        self.total_tokens = total_tokens
+        self.latency_ms = latency_ms
+
+
+class ModelInfo:
+    """Model information."""
+    
+    def __init__(self, id: str, name: str, provider: str, capabilities: List[str]):
+        self.id = id
+        self.name = name
+        self.provider = provider
+        self.capabilities = capabilities
 
 
 class AIProvider(ABC):
@@ -41,35 +72,24 @@ class AIProvider(ABC):
     
     @property
     @abstractmethod
-    def provider_id(self) -> str:
-        """Return unique provider identifier."""
+    def name(self) -> str:
+        """Provider name identifier."""
         pass
     
     @property
     @abstractmethod
-    def provider_name(self) -> str:
-        """Return human-readable provider name."""
-        pass
-    
-    @abstractmethod
-    async def is_available(self) -> bool:
-        """Check if provider is configured and available."""
-        pass
-    
-    @abstractmethod
-    async def list_models(self) -> list[dict[str, Any]]:
-        """List available models from this provider."""
+    def provider_type(self) -> str:
+        """Provider type (e.g., 'openai-compatible', 'anthropic')."""
         pass
     
     @abstractmethod
     async def chat(
         self,
-        messages: list[ChatMessage],
+        messages: List[ChatMessage],
         model: str,
         temperature: float = 0.7,
-        max_tokens: int = 2000,
-        top_p: float = 1.0,
-        **kwargs: Any,
+        max_tokens: Optional[int] = None,
+        **kwargs,
     ) -> ChatResponse:
         """Send chat completion request."""
         pass
@@ -77,9 +97,19 @@ class AIProvider(ABC):
     @abstractmethod
     async def embeddings(
         self,
-        input_text: str | list[str],
+        texts: List[str],
         model: str,
-        **kwargs: Any,
+        **kwargs,
     ) -> EmbeddingsResponse:
-        """Generate embeddings for text."""
+        """Generate embeddings for texts."""
+        pass
+    
+    @abstractmethod
+    async def list_models(self) -> List[ModelInfo]:
+        """List available models from this provider."""
+        pass
+    
+    @abstractmethod
+    async def is_available(self) -> bool:
+        """Check if provider is available."""
         pass
