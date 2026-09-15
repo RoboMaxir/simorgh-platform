@@ -1,56 +1,37 @@
 """
 SIMORGH Platform API - Health Endpoints
 
-Health and readiness check endpoints.
+Provides liveness and readiness checks.
 """
-from datetime import datetime, timezone
+from fastapi import APIRouter, Depends
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import APIRouter
+from app.db.session import get_db, engine
 
-from app.schemas.common import HealthResponse, ReadyResponse
-from app.config import get_settings
-
-
-settings = get_settings()
 router = APIRouter()
 
 
-@router.get("/health", response_model=HealthResponse)
-async def health():
+@router.get("/health")
+async def health_check():
     """
-    Health check endpoint.
+    Liveness check - verifies the process is alive.
     
-    Returns whether the process is alive.
+    Does NOT check database or external dependencies.
     """
-    return HealthResponse(
-        status="healthy",
-        version=settings.app_version,
-        timestamp=datetime.now(timezone.utc),
-    )
+    return {"status": "healthy"}
 
 
-@router.get("/ready", response_model=ReadyResponse)
-async def ready():
+@router.get("/ready")
+async def readiness_check(db: AsyncSession = Depends(get_db)):
     """
-    Readiness check endpoint.
+    Readiness check - verifies platform runtime and database are ready.
     
-    Returns whether all dependencies are ready.
+    Does NOT fail if external AI providers are unavailable.
     """
-    checks = {
-        "process": True,
-        "config": bool(settings.database_url),
-    }
-    
-    # Check database connectivity (simplified)
     try:
-        from app.db.base import engine
-        checks["database"] = True
-    except Exception:
-        checks["database"] = False
-    
-    all_ready = all(checks.values())
-    
-    return ReadyResponse(
-        ready=all_ready,
-        checks=checks,
-    )
+        # Check database connectivity
+        await db.execute(text("SELECT 1"))
+        return {"status": "ready", "database": "connected"}
+    except Exception as e:
+        return {"status": "not_ready", "database": "disconnected", "error": str(e)}
