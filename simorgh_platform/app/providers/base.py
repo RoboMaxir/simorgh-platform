@@ -3,7 +3,6 @@ SIMORGH Platform API - AI Provider Base Interface
 
 Abstract base class for all AI providers.
 """
-from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 
 
@@ -67,22 +66,19 @@ class ModelInfo:
         self.capabilities = capabilities
 
 
-class AIProvider(ABC):
+class AIProvider:
     """Abstract base class for AI providers."""
     
     @property
-    @abstractmethod
     def name(self) -> str:
         """Provider name identifier."""
         pass
     
     @property
-    @abstractmethod
     def provider_type(self) -> str:
         """Provider type (e.g., 'openai-compatible', 'anthropic')."""
         pass
     
-    @abstractmethod
     async def chat(
         self,
         messages: List[ChatMessage],
@@ -94,7 +90,6 @@ class AIProvider(ABC):
         """Send chat completion request."""
         pass
     
-    @abstractmethod
     async def embeddings(
         self,
         texts: List[str],
@@ -104,12 +99,10 @@ class AIProvider(ABC):
         """Generate embeddings for texts."""
         pass
     
-    @abstractmethod
     async def list_models(self) -> List[ModelInfo]:
         """List available models from this provider."""
         pass
     
-    @abstractmethod
     async def is_available(self) -> bool:
         """Check if provider is available."""
         pass

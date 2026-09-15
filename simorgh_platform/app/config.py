@@ -2,7 +2,7 @@
 SIMORGH Platform API - Configuration Management
 """
 from functools import lru_cache
-from typing import Optional, List
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -38,7 +38,15 @@ class Settings(BaseSettings):
     argon2_time_cost: int = 3
     argon2_parallelism: int = 1
 
-    # AI Providers - OpenAI Compatible
+    # Browser clients.  Empty is deliberately safe: credentialed CORS is off.
+    cors_origins: list[str] = []
+    cors_allow_credentials: bool = False
+
+    # AI providers.  These are platform-owned secrets, never request fields.
+    openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+    qwen_api_key: Optional[str] = None
+    local_llm_endpoint: Optional[str] = None
     default_openai_compatible_base_url: Optional[str] = None
     default_openai_compatible_api_key: Optional[str] = None
     
@@ -46,7 +54,7 @@ class Settings(BaseSettings):
     # Format: {"reasoning": [{"provider": "openai-compatible", "model": "qwen-72b"}], ...}
     logical_models_config: Optional[str] = None
 
-    # Rate Limiting
+    # Bounded in-process limiter. It is per-instance, not a distributed quota.
     rate_limit_requests_per_minute: int = 60
     rate_limit_requests_per_day: int = 10000
 

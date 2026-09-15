@@ -9,14 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
 from app.models.base import Base, UUIDMixin, TimestampMixin
 
-# Note: Vector type is imported conditionally based on pgvector availability
-try:
-    from pgvector.sqlalchemy import Vector
-    VECTOR_AVAILABLE = True
-except ImportError:
-    VECTOR_AVAILABLE = False
-    # Fallback - will raise error if used without pgvector
-    Vector = type('Vector', (), {})
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class KnowledgeChunk(Base, UUIDMixin, TimestampMixin):
@@ -41,7 +34,7 @@ class KnowledgeChunk(Base, UUIDMixin, TimestampMixin):
     content = Column(Text, nullable=False)
     
     # Vector embedding (dimension configurable, default 768 for many models)
-    embedding = Column(Vector(768), nullable=True)  # Requires pgvector
+    embedding = Column(JSONB, nullable=True)  # Foundation stores vectors without a pgvector dependency
     
     # Composite index for common queries
     __table_args__ = (

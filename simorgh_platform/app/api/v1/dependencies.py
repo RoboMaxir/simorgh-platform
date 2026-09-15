@@ -8,7 +8,6 @@ from typing import Optional
 from fastapi import Depends, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import get_db
 from app.core.security import decode_access_token
 from app.core.context import RequestContext
 from app.core.errors import (
@@ -31,7 +30,6 @@ async def get_request_id(x_request_id: Optional[str] = Header(None)) -> str:
 async def get_current_context(
     request: Request,
     authorization: Optional[str] = Header(None),
-    db: AsyncSession = Depends(get_db),
     request_id: str = Depends(get_request_id),
 ) -> RequestContext:
     """

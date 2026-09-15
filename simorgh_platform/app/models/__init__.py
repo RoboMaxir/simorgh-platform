@@ -1,26 +1,20 @@
-"""
-SIMORGH Platform API - Database Models
-"""
-from .base import Base, TimestampMixin, UUIDMixin
-from .tenant import Tenant
-from .application import Application
-from .application_installation import ApplicationInstallation
-from .credential import Credential
-from .ai_usage_log import AIUsageLog
-from .audit_event import AuditEvent
-from .knowledge_document import KnowledgeDocument
-from .knowledge_chunk import KnowledgeChunk
+"""Canonical ORM model registry used by Alembic."""
+from app.models.application import Application
+from app.models.application_installation import ApplicationInstallation
+from app.models.audit_event import AuditEvent
+from app.models.ai_usage import AIUsage
+from app.models.credential import Credential
+from app.models.knowledge_chunk import KnowledgeChunk
+from app.models.knowledge_document import KnowledgeDocument
+from app.models.tenant import Tenant
 
 __all__ = [
-    "Base",
-    "TimestampMixin",
-    "UUIDMixin",
-    "Tenant",
     "Application",
     "ApplicationInstallation",
-    "Credential",
-    "AIUsageLog",
     "AuditEvent",
-    "KnowledgeDocument",
+    "AIUsage",
+    "Credential",
     "KnowledgeChunk",
+    "KnowledgeDocument",
+    "Tenant",
 ]

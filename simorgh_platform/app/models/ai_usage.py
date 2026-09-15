@@ -7,8 +7,7 @@ from sqlalchemy import Column, String, Integer, Float, ForeignKey, Text, DateTim
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
 
-from app.db.base import Base
-from app.db.mixins import TimestampMixin
+from app.models.base import Base, TimestampMixin
 
 
 class AIUsage(Base, TimestampMixin):
@@ -33,9 +32,11 @@ class AIUsage(Base, TimestampMixin):
         nullable=True,
         index=True,
     )
+    installation_id = Column(PG_UUID(as_uuid=True), ForeignKey("application_installations.id", ondelete="SET NULL"), nullable=True, index=True)
     request_id = Column(String(64), nullable=False, index=True)
     provider = Column(String(50), nullable=False)
     model = Column(String(100), nullable=False)
+    logical_model = Column(String(100), nullable=False)
     operation = Column(String(50), nullable=False)  # chat, embeddings, etc.
     input_tokens = Column(Integer, default=0)
     output_tokens = Column(Integer, default=0)

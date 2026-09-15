@@ -1,214 +1,37 @@
-"""
-SIMORGH Platform API - AI Endpoints
-
-AI Gateway endpoints for chat, embeddings, models, and usage.
-"""
+"""Authenticated AI gateway endpoints."""
 from typing import Annotated
-import json
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.api.deps import get_context, get_db
-from app.db.base import async_session_maker
-from app.schemas.ai import (
-    ChatRequest,
-    ChatResponse,
-    EmbeddingsRequest,
-    EmbeddingsResponse,
-    ModelsResponse,
-    ProvidersResponse,
-    UsageResponse,
-    UsageEntry,
-)
-from app.core.exceptions import PlatformException
-from app.core.logging import get_logger
-
-
-logger = get_logger(__name__)
-
+from app.api.v1.dependencies import require_scope
+from app.core.context import RequestContext
+from app.db.session import get_db
+from app.schemas.ai import ChatRequest, ChatResponse, EmbeddingsRequest, EmbeddingsResponse, ModelsResponse, ProvidersResponse, UsageEntry, UsageResponse
+from app.services.ai.gateway import AIGateway
+from app.services.ai.registry import get_provider_registry
+from app.services.ai.usage import UsageTracker
 router = APIRouter()
-
-
-@router.post("/chat", response_model=ChatResponse)
-async def chat(
-    request: ChatRequest,
-    context: Annotated[dict, Depends(get_context)],
-):
-    """
-    Send a chat completion request.
-    
-    Applications should use model identifiers or routing policies
-    instead of provider-specific model names.
-    """
-    from app.services.ai.gateway import AIGateway
-    from app.providers.openai import OpenAIProvider
-    from app.providers.anthropic import AnthropicProvider
-    from app.providers.qwen import QwenProvider
-    from app.providers.openai_compatible import OpenAICompatibleProvider
-    
-    async with async_session_maker() as session:
-        providers = {
-            "openai": OpenAIProvider(),
-            "anthropic": AnthropicProvider(),
-            "qwen": QwenProvider(),
-            "openai_compatible": OpenAICompatibleProvider(),
-        }
-        
-        gateway = AIGateway(db_session=session, providers=providers)
-        
-        try:
-            response = await gateway.chat(
-                tenant_id=context["tenant_id"],
-                application_id=context["application_id"],
-                messages=[msg.model_dump() for msg in request.messages],
-                model=request.model,
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-                top_p=request.top_p,
-                metadata=request.metadata,
-            )
-            
-            return ChatResponse(
-                id=response.request_id,
-                model=response.model,
-                provider=str(type(response.raw_response).__module__),
-                content=response.content,
-                input_tokens=response.input_tokens,
-                output_tokens=response.output_tokens,
-                total_tokens=response.total_tokens,
-                latency_ms=response.latency_ms,
-                request_id=response.request_id,
-            )
-        except PlatformException:
-            raise
-        except Exception as e:
-            logger.error("chat_error", error=str(e), context=context)
-            raise HTTPException(status_code=502, detail=str(e))
-
-
-@router.post("/embeddings", response_model=EmbeddingsResponse)
-async def embeddings(
-    request: EmbeddingsRequest,
-    context: Annotated[dict, Depends(get_context)],
-):
-    """Generate embeddings for text."""
-    from app.services.ai.gateway import AIGateway
-    from app.providers.openai import OpenAIProvider
-    from app.providers.qwen import QwenProvider
-    from app.providers.openai_compatible import OpenAICompatibleProvider
-    
-    async with async_session_maker() as session:
-        providers = {
-            "openai": OpenAIProvider(),
-            "qwen": QwenProvider(),
-            "openai_compatible": OpenAICompatibleProvider(),
-        }
-        
-        gateway = AIGateway(db_session=session, providers=providers)
-        
-        try:
-            response = await gateway.embeddings(
-                tenant_id=context["tenant_id"],
-                application_id=context["application_id"],
-                input_text=request.input,
-                model=request.model,
-                metadata=request.metadata,
-            )
-            
-            return EmbeddingsResponse(
-                embeddings=response.embeddings,
-                model=response.model,
-                provider=str(type(response).__module__),
-                input_tokens=response.input_tokens,
-                request_id=response.request_id,
-            )
-        except PlatformException:
-            raise
-        except Exception as e:
-            logger.error("embeddings_error", error=str(e), context=context)
-            raise HTTPException(status_code=502, detail=str(e))
-
-
-@router.get("/models", response_model=ModelsResponse)
-async def list_models():
-    """List all available AI models."""
-    from app.providers.openai import OpenAIProvider
-    from app.providers.anthropic import AnthropicProvider
-    from app.providers.qwen import QwenProvider
-    from app.providers.openai_compatible import OpenAICompatibleProvider
-    
-    providers = {
-        "openai": OpenAIProvider(),
-        "anthropic": AnthropicProvider(),
-        "qwen": QwenProvider(),
-        "openai_compatible": OpenAICompatibleProvider(),
-    }
-    
-    all_models = []
-    for provider in providers.values():
-        if await provider.is_available():
-            models = await provider.list_models()
-            all_models.extend(models)
-    
-    return ModelsResponse(models=all_models)
-
-
-@router.get("/providers", response_model=ProvidersResponse)
-async def list_providers():
-    """List all configured AI providers."""
-    from app.providers.openai import OpenAIProvider
-    from app.providers.anthropic import AnthropicProvider
-    from app.providers.qwen import QwenProvider
-    from app.providers.openai_compatible import OpenAICompatibleProvider
-    
-    providers = {
-        "openai": OpenAIProvider(),
-        "anthropic": AnthropicProvider(),
-        "qwen": QwenProvider(),
-        "openai_compatible": OpenAICompatibleProvider(),
-    }
-    
-    providers_info = []
-    for provider_id, provider in providers.items():
-        is_available = await provider.is_available()
-        providers_info.append({
-            "id": provider_id,
-            "name": provider.provider_name,
-            "is_configured": is_available,
-            "is_available": is_available,
-        })
-    
-    return ProvidersResponse(providers=providers_info)
-
-
-@router.get("/usage", response_model=UsageResponse)
-async def get_usage(
-    context: Annotated[dict, Depends(get_context)],
-):
-    """Get AI usage history for the current tenant."""
-    from app.services.ai.usage import UsageTracker
-    
-    async with async_session_maker() as session:
-        tracker = UsageTracker(session)
-        usage_entries = await tracker.get_usage(context["tenant_id"])
-        summary = await tracker.get_usage_summary(context["tenant_id"])
-        
-        return UsageResponse(
-            entries=[
-                UsageEntry(
-                    request_id=e.request_id,
-                    provider=e.provider,
-                    model=e.model,
-                    operation=e.operation,
-                    input_tokens=e.input_tokens,
-                    output_tokens=e.output_tokens,
-                    total_tokens=e.total_tokens,
-                    status=e.status,
-                    timestamp=e.created_at.isoformat() if e.created_at else "",
-                )
-                for e in usage_entries
-            ],
-            total_requests=summary["total_requests"],
-            total_tokens=summary["total_tokens"],
-        )
+def gateway(db): return AIGateway(db, get_provider_registry())
+@router.post('/chat', response_model=ChatResponse)
+async def chat(request: ChatRequest, context: Annotated[RequestContext, Depends(require_scope('ai.chat'))], db: AsyncSession = Depends(get_db)):
+    r = await gateway(db).chat(tenant_id=context.tenant_id, application_id=context.application_id, installation_id=context.installation_id, request_id=context.request_id, messages=[m.model_dump() for m in request.messages], model=request.model, temperature=request.temperature, max_tokens=request.max_tokens, top_p=request.top_p, metadata=request.metadata)
+    return ChatResponse(id=r.request_id, model=r.model, provider=r.provider, content=r.content, input_tokens=r.input_tokens, output_tokens=r.output_tokens, total_tokens=r.total_tokens, latency_ms=r.latency_ms or 0, request_id=r.request_id)
+@router.post('/embeddings', response_model=EmbeddingsResponse)
+async def embeddings(request: EmbeddingsRequest, context: Annotated[RequestContext, Depends(require_scope('ai.embeddings'))], db: AsyncSession = Depends(get_db)):
+    r = await gateway(db).embeddings(tenant_id=context.tenant_id, application_id=context.application_id, installation_id=context.installation_id, request_id=context.request_id, input_text=request.input, model=request.model, metadata=request.metadata)
+    return EmbeddingsResponse(embeddings=r.embeddings, model=r.model, provider=r.provider, input_tokens=r.total_tokens, request_id=r.request_id)
+@router.get('/models', response_model=ModelsResponse)
+async def models(_: Annotated[RequestContext, Depends(require_scope('ai.models.read'))]):
+    result=[]
+    for provider in get_provider_registry().values():
+        if await provider.is_available(): result.extend(await provider.list_models())
+    return ModelsResponse(models=result)
+@router.get('/providers', response_model=ProvidersResponse)
+async def providers(_: Annotated[RequestContext, Depends(require_scope('ai.models.read'))]):
+    result=[]
+    for key, provider in get_provider_registry().items():
+        available=await provider.is_available(); result.append({'id':key,'name':provider.provider_name,'is_configured':available,'is_available':available})
+    return ProvidersResponse(providers=result)
+@router.get('/usage', response_model=UsageResponse)
+async def usage(context: Annotated[RequestContext, Depends(require_scope('ai.usage.read'))], db: AsyncSession = Depends(get_db)):
+    entries=await UsageTracker(db).get_usage(context.tenant_id)
+    return UsageResponse(entries=[UsageEntry(request_id=e.request_id,provider=e.provider,model=e.model,operation=e.operation,input_tokens=e.input_tokens,output_tokens=e.output_tokens,total_tokens=e.total_tokens,status=e.status,timestamp=e.created_at.isoformat()) for e in entries],total_requests=len(entries),total_tokens=sum(e.total_tokens for e in entries))

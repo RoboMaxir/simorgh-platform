@@ -6,9 +6,9 @@ Standardized error codes and exception handling.
 from typing import Optional, Any, Dict
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
-import structlog
+import logging
 
-logger = structlog.get_logger()
+logger = logging.getLogger("simorgh")
 
 
 # Error code taxonomy
@@ -93,13 +93,7 @@ async def platform_exception_handler(request: Request, exc: PlatformError) -> JS
     """Handle platform exceptions with standardized response."""
     request_id = getattr(request.state, "request_id", "unknown")
     
-    logger.warning(
-        "platform_error",
-        code=exc.code,
-        message=exc.message,
-        status_code=exc.status_code,
-        request_id=request_id,
-    )
+    logger.warning("platform_error code=%s status_code=%s request_id=%s", exc.code, exc.status_code, request_id)
     
     return JSONResponse(
         status_code=exc.status_code,
@@ -117,12 +111,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     """Handle unexpected exceptions."""
     request_id = getattr(request.state, "request_id", "unknown")
     
-    logger.error(
-        "unexpected_error",
-        error=str(exc),
-        request_id=request_id,
-        exc_info=True,
-    )
+    logger.error("unexpected_error request_id=%s error=%s", request_id, str(exc), exc_info=True)
     
     return JSONResponse(
         status_code=500,

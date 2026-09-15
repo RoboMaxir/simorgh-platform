@@ -4,6 +4,7 @@ SIMORGH Platform API - Authentication Endpoints
 Handles credential-based token exchange.
 """
 import base64
+import json
 from datetime import timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -15,6 +16,7 @@ from app.models.credential import Credential
 from app.models.application_installation import ApplicationInstallation
 from app.core.security import verify_secret, create_access_token
 from app.core.errors import AuthenticationError, ErrorCode
+from app.config import get_settings
 
 router = APIRouter()
 
@@ -95,26 +97,31 @@ async def exchange_token(
         )
     
     # Build token payload
-    scopes_str = credential.scopes or "[]"
+    try:
+        scopes = json.loads(credential.scopes or "[]")
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise AuthenticationError(ErrorCode.INVALID_CREDENTIALS, "Credential scope configuration is invalid.") from exc
+    if not isinstance(scopes, list) or not all(isinstance(scope, str) and scope for scope in scopes):
+        raise AuthenticationError(ErrorCode.INVALID_CREDENTIALS, "Credential scope configuration is invalid.")
     token_data = {
         "tenant_id": str(installation.tenant_id),
         "application_id": str(installation.application_id),
         "installation_id": str(installation.id),
         "credential_id": str(credential.id),
-        "scopes": scopes_str if isinstance(scopes_str, list) else ["*"],  # Simplified for MVP
+        "scopes": scopes,
     }
     
     # Create access token
     access_token = create_access_token(
         data=token_data,
-        expires_delta=timedelta(minutes=60),
+        expires_delta=timedelta(minutes=get_settings().access_token_expire_minutes),
     )
     
     return {
         "data": {
             "access_token": access_token,
             "token_type": "Bearer",
-            "expires_in": 3600,
+            "expires_in": get_settings().access_token_expire_minutes * 60,
             "scope": token_data["scopes"],
         }
     }

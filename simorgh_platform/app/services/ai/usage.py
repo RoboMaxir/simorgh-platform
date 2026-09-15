@@ -27,6 +27,8 @@ class UsageTracker:
         self,
         tenant_id: str,
         application_id: Optional[str],
+        installation_id: Optional[str],
+        logical_model: str,
         request_id: str,
         provider: str,
         model: str,
@@ -47,6 +49,8 @@ class UsageTracker:
         usage = AIUsage(
             tenant_id=tenant_id,
             application_id=application_id,
+            installation_id=installation_id,
+            logical_model=logical_model,
             request_id=request_id,
             provider=provider,
             model=model,
@@ -65,12 +69,8 @@ class UsageTracker:
         await self.db.flush()
         
         logger.info(
-            "ai_usage_recorded",
-            request_id=request_id,
-            provider=provider,
-            model=model,
-            tokens=total_tokens,
-            cost=estimated_cost,
+            "ai_usage_recorded request_id=%s provider=%s model=%s tokens=%s cost=%s",
+            request_id, provider, model, total_tokens, estimated_cost,
         )
         
         return usage

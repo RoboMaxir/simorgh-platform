@@ -5,15 +5,11 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import Column, DateTime
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
 
 
-class Base(DeclarativeBase):
-    """SQLAlchemy declarative base for all models."""
-    
-    pass
+from app.db.base import Base
 
 
 class UUIDMixin:

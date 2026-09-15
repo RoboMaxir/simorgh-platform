@@ -4,7 +4,7 @@ SIMORGH Platform API - Knowledge Document Model
 Represents a document in the knowledge base.
 Documents can be chunked for vector search.
 """
-from sqlalchemy import Column, String, Text, ForeignKey, Boolean, Index
+from sqlalchemy import Column, String, Text, ForeignKey, Boolean, Index, DateTime
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 
 from app.models.base import Base, UUIDMixin, TimestampMixin
@@ -34,7 +34,7 @@ class KnowledgeDocument(Base, UUIDMixin, TimestampMixin):
     
     # Indexing status
     is_indexed = Column(Boolean, default=False, index=True)
-    indexed_at = Column(TimestampMixin.created_at.__class__, nullable=True)
+    indexed_at = Column(DateTime(timezone=True), nullable=True)
     
     # Additional metadata
     metadata = Column(JSONB, nullable=True)

@@ -1,0 +1,3 @@
+# Runtime dependencies are declared canonically in pyproject.toml.
+# This file supports deployment systems that require a requirements entrypoint.
+.
