@@ -1,73 +1,46 @@
 ```
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
+env/
 venv/
-ENV/
-env.bak/
 .venv/
+.ENV
+.ENV.*
+.env
+.env.*
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
 
-# Dependencies
-node_modules/
+# Alembic
+alembic/versions/
 
-# IDE and editor
+# Docker
+docker/build/
+.dockerenv
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *.tmp
 
-# Logs
-*.log
-
-# Environment variables
-.env
-.env.local
-*.env.*
-
-# Coverage reports
-.coverage
-htmlcov/
-.coverage.*
-
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# PyTest
-.pytest_cache/
-
-# Distribution / packaging
-.landscape.yaml
-.pyre/
-.pytype/
-mypy_cache/
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Security
-ai_usage_log.py
+# Build artifacts
+build/
+dist/
+target/
+.gradle/
 ```
