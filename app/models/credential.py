@@ -5,7 +5,7 @@ Stores hashed secrets for application authentication.
 Credentials belong to an ApplicationInstallation (tenant-specific).
 Supports scope-based authorization.
 """
-from sqlalchemy import Column, String, Boolean, Text, ForeignKey
+from sqlalchemy import Column, String, Boolean, Text, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
@@ -30,11 +30,11 @@ class Credential(Base, UUIDMixin, TimestampMixin):
     scopes = Column(Text, nullable=True)  # JSON array of scopes as text
     is_active = Column(Boolean, default=True, nullable=False)
     expires_at = Column(
-        TimestampMixin.created_at.__class__,
+        DateTime(timezone=True),
         nullable=True,
     )
     last_used_at = Column(
-        TimestampMixin.created_at.__class__,
+        DateTime(timezone=True),
         nullable=True,
     )
     

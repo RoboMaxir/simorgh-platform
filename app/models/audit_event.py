@@ -46,8 +46,8 @@ class AuditEvent(Base, UUIDMixin, TimestampMixin):
     resource_type = Column(String(100), nullable=True)
     resource_id = Column(String(255), nullable=True)
     
-    # Additional metadata
-    metadata = Column(JSONB, nullable=True)
+    # Additional metadata (renamed to avoid reserved word)
+    event_metadata = Column(JSONB, nullable=True)
     
     # Composite index for common queries
     __table_args__ = (

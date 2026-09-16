@@ -4,7 +4,7 @@ SIMORGH Platform API - Knowledge Document Model
 Represents a document in the knowledge base.
 Documents can be chunked for vector search.
 """
-from sqlalchemy import Column, String, Text, ForeignKey, Boolean, Index
+from sqlalchemy import Column, String, Text, ForeignKey, Boolean, Index, DateTime
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 
 from app.models.base import Base, UUIDMixin, TimestampMixin
