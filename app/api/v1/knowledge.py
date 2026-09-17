@@ -11,7 +11,7 @@ from sqlalchemy import select
 from app.db.session import get_db
 from app.api.v1.dependencies import require_scope
 from app.core.context import RequestContext
-from app.core.exceptions import NotFoundError, ErrorCode
+from app.core.errors import NotFoundError, ErrorCode
 from app.models.knowledge_document import KnowledgeDocument
 
 router = APIRouter()
@@ -62,9 +62,9 @@ async def search_knowledge(
 
 @router.get("/documents/{document_id}")
 async def get_document(
-    document_id: str = Path(..., description="Document ID"),
-    context: Annotated[RequestContext, Depends(require_scope("knowledge.retrieve"))],
     db: AsyncSession = Depends(get_db),
+    context: Annotated[RequestContext, Depends(require_scope("knowledge.retrieve"))] = None,
+    document_id: str = Path(..., description="Document ID"),
 ):
     """
     Retrieve a specific knowledge document by ID.

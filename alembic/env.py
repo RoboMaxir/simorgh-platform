@@ -14,13 +14,27 @@ from app.config import get_settings
 # Import all models to ensure they are registered with Base
 from app.models import (  # noqa: F401
     Tenant,
+    Workspace,
+    User,
+    Role,
+    Permission,
+    UserRole,
+    RolePermission,
     Application,
     ApplicationInstallation,
     Credential,
-    AIUsageLog,
+    CreditAccount,
+    CreditTransaction,
+    UsageLedger,
+    SubscriptionPlan,
+    Subscription,
+    AIUsage,
     AuditEvent,
+    KnowledgeSpace,
     KnowledgeDocument,
     KnowledgeChunk,
+    KnowledgeEmbedding,
+    KnowledgeFile,
 )
 
 # this is the Alembic Config object
