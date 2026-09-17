@@ -18,7 +18,7 @@ Required fields:
 
 Secrets must never be stored in plaintext.
 """
-from sqlalchemy import Column, String, Boolean, Text, ForeignKey, DateTime
+from sqlalchemy import Column, String, Boolean, Text, ForeignKey, DateTime, Index
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
@@ -31,6 +31,19 @@ class Credential(Base, UUIDMixin, TimestampMixin):
     
     __tablename__ = "credentials"
     
+    # Direct references for tenant isolation (derived from installation but stored for query efficiency)
+    tenant_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    application_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("applications.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     installation_id = Column(
         PG_UUID(as_uuid=True),
         ForeignKey("application_installations.id", ondelete="CASCADE"),
@@ -57,6 +70,13 @@ class Credential(Base, UUIDMixin, TimestampMixin):
     
     # Relationships
     installation = relationship("ApplicationInstallation", backref="credentials")
+    tenant = relationship("Tenant", backref="credentials")
+    application = relationship("Application", backref="credentials")
+    
+    # Composite index for common queries
+    __table_args__ = (
+        Index('ix_credential_tenant_app', 'tenant_id', 'application_id'),
+    )
     
     def __repr__(self) -> str:
         return f"<Credential {self.key_prefix}... ({self.name})>"
