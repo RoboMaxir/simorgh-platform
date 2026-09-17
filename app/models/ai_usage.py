@@ -3,19 +3,19 @@ SIMORGH Platform API - AI Usage Tracking Model
 
 Tracks all AI requests for usage monitoring, billing, and analytics.
 """
-from sqlalchemy import Column, String, Integer, Float, ForeignKey, Text, DateTime
+from sqlalchemy import Column, String, Integer, Float, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
+from datetime import datetime, timezone
 
-from app.db.base import Base
-from app.db.mixins import TimestampMixin
+from app.models.base import Base
 
 
-class AIUsage(Base, TimestampMixin):
+class AIUsage(Base):
     """AI Usage tracking model."""
-    
+
     __tablename__ = "ai_usage"
-    
+
     id = Column(
         PG_UUID(as_uuid=True),
         primary_key=True,
@@ -23,7 +23,7 @@ class AIUsage(Base, TimestampMixin):
         index=True,
     )
     tenant_id = Column(
-        String(36),
+        PG_UUID(as_uuid=True),
         nullable=False,
         index=True,
     )
@@ -44,7 +44,13 @@ class AIUsage(Base, TimestampMixin):
     status = Column(String(20), nullable=False)  # success, error
     error_message = Column(Text, nullable=True)
     estimated_cost = Column(Float, default=0.0)
-    metadata = Column(Text, nullable=True)  # JSON metadata
-    
+    metadata_json = Column(Text, nullable=True)  # JSON metadata
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
+
     def __repr__(self) -> str:
         return f"<AIUsage {self.request_id} ({self.provider}/{self.model})>"
