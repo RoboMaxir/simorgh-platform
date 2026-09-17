@@ -7,52 +7,140 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="login-page">
-  <div class="login-card">
-    <div class="login-logo">SIMORGH</div>
-    <p class="login-subtitle">Platform Dashboard</p>
-    
-    <form id="login-form">
-      <div class="form-group">
-        <label class="form-label" for="api-key">API Key</label>
-        <input 
-          type="password" 
-          id="api-key" 
-          name="api-key" 
-          class="form-input" 
-          placeholder="Enter your API key"
-          required
-        >
-        <p class="form-help">Enter your Platform API key to authenticate</p>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-logo">SIMORGH</div>
+      <p class="login-subtitle">Platform Dashboard</p>
+      
+      <!-- Human Login Form -->
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="Enter your email"
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input" 
+            placeholder="Enter your password"
+            required
+          >
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Sign In
+        </button>
+        
+        <div id="error-message" class="hidden" style="color: var(--danger-color); margin-top: 1rem; text-align: center;"></div>
+      </form>
+      
+      <div class="login-footer">
+        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+        <p class="text-small" style="text-align: center; color: var(--text-muted);">
+          Need an API Key for programmatic access? 
+          <a href="#" onclick="showAPIInfo(); return false;" style="color: var(--primary-color);">Learn more</a>
+        </p>
       </div>
-      
-      <button type="submit" class="btn btn-primary" style="width: 100%;">
-        Sign In
-      </button>
-      
-      <div id="error-message" class="hidden" style="color: var(--danger-color); margin-top: 1rem; text-align: center;"></div>
-    </form>
+    </div>
+    
+    <!-- API Info Modal -->
+    <div id="api-info-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>API Access for Developers</h2>
+          <button class="modal-close" onclick="hideAPIInfo()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p><strong>For Programmatic Access:</strong> Use API Keys to integrate your applications with SIMORGH Platform.</p>
+          
+          <h3>How it works:</h3>
+          <ol style="margin: 1rem 0; padding-left: 1.5rem;">
+            <li>Sign in to the Dashboard with your email and password</li>
+            <li>Navigate to <strong>Credentials</strong> section in the sidebar</li>
+            <li>Create a new API Key with appropriate scopes (ai:chat, ai:embedding, knowledge:read, etc.)</li>
+            <li>Copy and securely store your API key (shown only once)</li>
+            <li>Use the key in your applications:</li>
+          </ol>
+          
+          <pre style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-md); overflow-x: auto;"><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+          
+          <h3>Python SDK Example:</h3>
+          <pre style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-md); overflow-x: auto;"><code>from simorgh_sdk import SimorghClient
+
+client = SimorghClient(api_key="sk_test_...")
+
+# AI Chat
+response = client.ai.chat(
+    model="reasoning",
+    messages=[{"role": "user", "content": "Hello"}]
+)
+
+# Knowledge Search
+results = client.knowledge.search(
+    space_id="ks_...",
+    query="research question"
+)</code></pre>
+          
+          <p class="text-small" style="color: var(--text-muted); margin-top: 1rem;">
+            <strong>Note:</strong> API Keys are for machine-to-machine authentication. For human users, always use the dashboard login.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="hideAPIInfo()">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="js/api.js"></script>
   <script>
+    // Modal functions
+    function showAPIInfo() {
+      document.getElementById('api-info-modal').classList.remove('hidden');
+    }
+    
+    function hideAPIInfo() {
+      document.getElementById('api-info-modal').classList.add('hidden');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('api-info-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideAPIInfo();
+      }
+    });
+    
+    // Handle login form submission
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const apiKey = document.getElementById('api-key').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
       const errorEl = document.getElementById('error-message');
       
-      if (!apiKey) {
-        errorEl.textContent = 'Please enter your API key';
+      if (!email || !password) {
+        errorEl.textContent = 'Please enter both email and password';
         errorEl.classList.remove('hidden');
         return;
       }
       
       try {
         const api = new SimorghAPI();
-        await api.login(apiKey);
+        await api.loginWithEmail(email, password);
         window.location.href = 'dashboard.html';
       } catch (error) {
-        errorEl.textContent = 'Invalid API key. Please try again.';
+        errorEl.textContent = error.message || 'Login failed. Please check your credentials.';
         errorEl.classList.remove('hidden');
         console.error('Login error:', error);
       }
