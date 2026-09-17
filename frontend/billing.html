@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credits & Billing - SIMORGH Platform</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a href="dashboard.html" class="nav-logo">SIMORGH</a>
+      <ul class="nav-menu">
+        <li class="nav-item"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li class="nav-item"><a href="applications.html" class="nav-link">Applications</a></li>
+        <li class="nav-item"><a href="credentials.html" class="nav-link">API Keys</a></li>
+        <li class="nav-item"><a href="usage.html" class="nav-link">Usage</a></li>
+        <li class="nav-item"><a href="billing.html" class="nav-link active">Credits</a></li>
+        <li class="nav-item"><a href="knowledge.html" class="nav-link">Knowledge</a></li>
+        <li class="nav-item"><a href="logs.html" class="nav-link">Logs</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="header">
+        <h1>Credits & Billing</h1>
+        <div class="user-info">
+          <button id="logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+      </header>
+
+      <!-- Balance Card -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Current Balance</div>
+          <div class="stat-value" id="current-balance">Loading...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Subscription Plan</div>
+          <div class="stat-value" id="subscription-plan" style="font-size: 1.25rem;">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Add Credits -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Add Credits</h3>
+        </div>
+        <div class="card-body">
+          <p>Credit purchasing would be implemented here based on your billing provider integration.</p>
+          <div class="flex gap-2 mt-4">
+            <button class="btn btn-secondary">Add 1,000 Credits</button>
+            <button class="btn btn-secondary">Add 5,000 Credits</button>
+            <button class="btn btn-secondary">Add 10,000 Credits</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transactions History -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Transaction History</h3>
+        </div>
+        <div class="card-body" id="transactions-table">
+          Loading transactions...
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
