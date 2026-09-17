@@ -1,11 +1,24 @@
 """
-SIMORGH Platform API - Credential Model
+SIMORGH Platform API - Credential Model (API Key)
 
 Stores hashed secrets for application authentication.
-Credentials belong to an ApplicationInstallation (tenant-specific).
+Credentials (API Keys) belong to an ApplicationInstallation (tenant-specific).
 Supports scope-based authorization.
+
+Required fields:
+- id
+- tenant_id (via installation)
+- application_id (via installation)
+- key_prefix
+- secret_hash
+- scopes
+- expires_at
+- last_used_at
+- revoked_at
+
+Secrets must never be stored in plaintext.
 """
-from sqlalchemy import Column, String, Boolean, Text, ForeignKey, DateTime
+from sqlalchemy import Column, String, Boolean, Text, ForeignKey, DateTime, Index
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
@@ -14,18 +27,31 @@ from app.models.base import Base, UUIDMixin, TimestampMixin
 
 
 class Credential(Base, UUIDMixin, TimestampMixin):
-    """Credential model for application authentication."""
+    """Credential (API Key) model for application authentication."""
     
     __tablename__ = "credentials"
     
+    # Direct references for tenant isolation (derived from installation but stored for query efficiency)
+    tenant_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    application_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("applications.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     installation_id = Column(
         PG_UUID(as_uuid=True),
         ForeignKey("application_installations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    key_id = Column(String(64), nullable=False, index=True)  # Public identifier
-    secret_hash = Column(String(255), nullable=False)  # Argon2 hash
+    key_prefix = Column(String(16), nullable=False, index=True)  # Public prefix for identification
+    secret_hash = Column(String(255), nullable=False)  # Argon2 hash - NEVER store plaintext
     name = Column(String(100), nullable=False)
     scopes = Column(Text, nullable=True)  # JSON array of scopes as text
     is_active = Column(Boolean, default=True, nullable=False)
@@ -37,12 +63,23 @@ class Credential(Base, UUIDMixin, TimestampMixin):
         DateTime(timezone=True),
         nullable=True,
     )
+    revoked_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     
     # Relationships
     installation = relationship("ApplicationInstallation", backref="credentials")
+    tenant = relationship("Tenant", backref="credentials")
+    application = relationship("Application", backref="credentials")
+    
+    # Composite index for common queries
+    __table_args__ = (
+        Index('ix_credential_tenant_app', 'tenant_id', 'application_id'),
+    )
     
     def __repr__(self) -> str:
-        return f"<Credential {self.key_id} ({self.name})>"
+        return f"<Credential {self.key_prefix}... ({self.name})>"
     
     def has_scope(self, scope: str) -> bool:
         """Check if credential has a specific scope."""
@@ -60,3 +97,7 @@ class Credential(Base, UUIDMixin, TimestampMixin):
         if self.expires_at is None:
             return False
         return datetime.now(timezone.utc) > self.expires_at
+    
+    def is_revoked(self) -> bool:
+        """Check if credential has been revoked."""
+        return self.revoked_at is not None
