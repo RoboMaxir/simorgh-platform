@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - SIMORGH Platform</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <div class="login-logo">SIMORGH</div>
+    <p class="login-subtitle">Platform Dashboard</p>
+    
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="api-key">API Key</label>
+        <input 
+          type="password" 
+          id="api-key" 
+          name="api-key" 
+          class="form-input" 
+          placeholder="Enter your API key"
+          required
+        >
+        <p class="form-help">Enter your Platform API key to authenticate</p>
+      </div>
+      
+      <button type="submit" class="btn btn-primary" style="width: 100%;">
+        Sign In
+      </button>
+      
+      <div id="error-message" class="hidden" style="color: var(--danger-color); margin-top: 1rem; text-align: center;"></div>
+    </form>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const apiKey = document.getElementById('api-key').value.trim();
+      const errorEl = document.getElementById('error-message');
+      
+      if (!apiKey) {
+        errorEl.textContent = 'Please enter your API key';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      try {
+        const api = new SimorghAPI();
+        await api.login(apiKey);
+        window.location.href = 'dashboard.html';
+      } catch (error) {
+        errorEl.textContent = 'Invalid API key. Please try again.';
+        errorEl.classList.remove('hidden');
+        console.error('Login error:', error);
+      }
+    });
+    
+    // Redirect if already logged in
+    (function() {
+      const storedKey = localStorage.getItem('simorgh_api_key');
+      if (storedKey) {
+        const api = new SimorghAPI();
+        api.get('/applications').then(() => {
+          window.location.href = 'dashboard.html';
+        }).catch(() => {
+          localStorage.removeItem('simorgh_api_key');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

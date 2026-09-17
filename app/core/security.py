@@ -5,7 +5,7 @@ Handles password hashing, JWT token creation/validation.
 """
 import jwt
 from datetime import datetime, timezone, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHash
 
@@ -76,3 +76,10 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         return None
     except jwt.InvalidTokenError:
         return None
+
+
+def verify_scope(required_scope: str, scopes: List[str]) -> bool:
+    """Verify if required scope is present in the list of scopes."""
+    if not scopes:
+        return False
+    return required_scope in scopes or "*" in scopes

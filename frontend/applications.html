@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applications - SIMORGH Platform</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a href="dashboard.html" class="nav-logo">SIMORGH</a>
+      <ul class="nav-menu">
+        <li class="nav-item"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li class="nav-item"><a href="applications.html" class="nav-link active">Applications</a></li>
+        <li class="nav-item"><a href="credentials.html" class="nav-link">API Keys</a></li>
+        <li class="nav-item"><a href="usage.html" class="nav-link">Usage</a></li>
+        <li class="nav-item"><a href="billing.html" class="nav-link">Credits</a></li>
+        <li class="nav-item"><a href="knowledge.html" class="nav-link">Knowledge</a></li>
+        <li class="nav-item"><a href="logs.html" class="nav-link">Logs</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="header">
+        <h1>Applications</h1>
+        <div class="user-info">
+          <button id="logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Available Applications</h3>
+        </div>
+        <div class="card-body">
+          <p class="mb-0">Install applications to enable them for your workspace.</p>
+        </div>
+      </div>
+
+      <div id="applications-list">
+        <div class="card"><p>Loading applications...</p></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
