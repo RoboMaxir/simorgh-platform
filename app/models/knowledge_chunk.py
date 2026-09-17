@@ -2,10 +2,25 @@
 SIMORGH Platform API - Knowledge Chunk Model
 
 Represents a chunk of a document with vector embedding.
+Part of the Knowledge Foundation architecture:
+
+KnowledgeSpace
+    |
+    Document
+        |
+        Chunk
+            |
+            Embedding
+
 Used for semantic search via pgvector or other vector stores.
+Supports:
+- source tracking (via document)
+- metadata
+- permissions (via tenant/workspace isolation)
 """
 from sqlalchemy import Column, Integer, ForeignKey, Index, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import relationship
 
 from app.models.base import Base, UUIDMixin, TimestampMixin
 
@@ -32,6 +47,13 @@ class KnowledgeChunk(Base, UUIDMixin, TimestampMixin):
     )
     tenant_id = Column(
         PG_UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    workspace_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -42,6 +64,9 @@ class KnowledgeChunk(Base, UUIDMixin, TimestampMixin):
     
     # Vector embedding (dimension configurable, default 768 for many models)
     embedding = Column(Vector(768), nullable=True)  # Requires pgvector
+    
+    # Relationships
+    document = relationship("KnowledgeDocument", back_populates="chunks")
     
     # Composite index for common queries
     __table_args__ = (

@@ -2,10 +2,24 @@
 SIMORGH Platform API - Knowledge Document Model
 
 Represents a document in the knowledge base.
-Documents can be chunked for vector search.
+Part of the Knowledge Foundation architecture:
+
+KnowledgeSpace
+    |
+    Document
+        |
+        Chunk
+            |
+            Embedding
+
+Supports:
+- source tracking
+- metadata
+- permissions
 """
 from sqlalchemy import Column, String, Text, ForeignKey, Boolean, Index, DateTime
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
+from sqlalchemy.orm import relationship
 
 from app.models.base import Base, UUIDMixin, TimestampMixin
 
@@ -15,14 +29,22 @@ class KnowledgeDocument(Base, UUIDMixin, TimestampMixin):
     
     __tablename__ = "knowledge_documents"
     
-    tenant_id = Column(
+    space_id = Column(
         PG_UUID(as_uuid=True),
+        ForeignKey("knowledge_spaces.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    application_id = Column(
+    tenant_id = Column(
         PG_UUID(as_uuid=True),
-        nullable=True,  # Can be null for global knowledge
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    workspace_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
         index=True,
     )
     
@@ -34,10 +56,14 @@ class KnowledgeDocument(Base, UUIDMixin, TimestampMixin):
     
     # Indexing status
     is_indexed = Column(Boolean, default=False, index=True)
-    indexed_at = Column(TimestampMixin.created_at.__class__, nullable=True)
+    indexed_at = Column(DateTime(timezone=True), nullable=True)
     
     # Additional metadata
-    metadata = Column(JSONB, nullable=True)
+    metadata_json = Column(JSONB, nullable=True)
+    
+    # Relationships
+    space = relationship("KnowledgeSpace", back_populates="documents")
+    chunks = relationship("KnowledgeChunk", back_populates="document", cascade="all, delete-orphan")
     
     # Composite index for common queries
     __table_args__ = (

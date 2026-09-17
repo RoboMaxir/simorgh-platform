@@ -2,6 +2,18 @@
 SIMORGH Platform API - AI Usage Tracking Model
 
 Tracks all AI requests for usage monitoring, billing, and analytics.
+Required fields for billing integration:
+- tenant_id
+- application_id
+- workspace_id
+- request_id
+- provider
+- model
+- operation
+- input_tokens
+- output_tokens
+- estimated_cost
+- status
 """
 from sqlalchemy import Column, String, Integer, Float, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -24,6 +36,13 @@ class AIUsage(Base):
     )
     tenant_id = Column(
         PG_UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    workspace_id = Column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -43,7 +62,7 @@ class AIUsage(Base):
     latency_ms = Column(Integer, nullable=True)
     status = Column(String(20), nullable=False)  # success, error
     error_message = Column(Text, nullable=True)
-    estimated_cost = Column(Float, default=0.0)
+    estimated_cost = Column(Integer, default=0, nullable=False)  # Cost in smallest currency unit
     metadata_json = Column(Text, nullable=True)  # JSON metadata
     created_at = Column(
         DateTime(timezone=True),
