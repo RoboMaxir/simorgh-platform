@@ -14,6 +14,8 @@ from .audit_event import AuditEvent
 from .knowledge_space import KnowledgeSpace
 from .knowledge_document import KnowledgeDocument
 from .knowledge_chunk import KnowledgeChunk
+from .knowledge_embedding import KnowledgeEmbedding
+from .knowledge_file import KnowledgeFile
 
 __all__ = [
     "Base",
@@ -39,4 +41,6 @@ __all__ = [
     "KnowledgeSpace",
     "KnowledgeDocument",
     "KnowledgeChunk",
+    "KnowledgeEmbedding",
+    "KnowledgeFile",
 ]

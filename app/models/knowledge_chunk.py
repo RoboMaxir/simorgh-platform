@@ -67,6 +67,7 @@ class KnowledgeChunk(Base, UUIDMixin, TimestampMixin):
     
     # Relationships
     document = relationship("KnowledgeDocument", back_populates="chunks")
+    embeddings = relationship("KnowledgeEmbedding", back_populates="chunk", uselist=False, cascade="all, delete-orphan")
     
     # Composite index for common queries
     __table_args__ = (
