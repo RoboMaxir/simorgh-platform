@@ -9,38 +9,50 @@ env/
 venv/
 .venv/
 .ENV
-.ENV.*
 .env
 .env.*
+.env.local
+.python-version
+.python_history
 .pytest_cache/
 .mypy_cache/
 .coverage
+coverage/
 htmlcov/
 
-# Alembic
-alembic/versions/
-
-# Docker
-docker/build/
-.dockerenv
+# Build artifacts
+build/
+dist/
+*.egg
+*.egg-info/
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.o
+*.obj
 
 # Logs
 *.log
+
+# Temp files
+*.tmp
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
 
-# IDE
+# Editors
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
 
-# Build artifacts
-build/
-dist/
-target/
-.gradle/
+# Environment
+.env
+.env.local
+*.env.*
 ```
