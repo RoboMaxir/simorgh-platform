@@ -24,10 +24,10 @@ wheels/
 # Environment
 .env
 .env.local
-*.env.*
-
-# Logs
-*.log
+.env.*
+.venv/
+venv/
+ENV/
 
 # IDE
 .vscode/
@@ -36,7 +36,11 @@ wheels/
 *.swo
 *.tmp
 
-# OS
-.DS_Store
-Thumbs.db
+# Logs
+*.log
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
 ```

@@ -82,6 +82,9 @@ class Permission(Base, UUIDMixin, TimestampMixin):
     resource = Column(String(50), nullable=False)  # e.g., "application", "api_key"
     action = Column(String(20), nullable=False)  # e.g., "create", "read", "update", "delete"
 
+    # Relationships
+    role_permissions = relationship("RolePermission", back_populates="permission")
+
     def __repr__(self) -> str:
         return f"<Permission {self.name}>"
 
@@ -143,7 +146,7 @@ class RolePermission(Base, UUIDMixin, TimestampMixin):
 
     # Relationships
     role = relationship("Role", back_populates="permissions", foreign_keys=[role_id])
-    permission = relationship("Permission", foreign_keys=[permission_id])
+    permission = relationship("Permission", back_populates="role_permissions", foreign_keys=[permission_id])
 
     def __repr__(self) -> str:
         return f"<RolePermission role={self.role_id} permission={self.permission_id}>"
