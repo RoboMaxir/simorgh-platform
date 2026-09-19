@@ -12,6 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -23,6 +24,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: simorgh_app
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
@@ -41,7 +43,7 @@ services:
       sh -c "python -m alembic upgrade head &&
              python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
     healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
+      test: ["CMD", "python", "-c", "import httpx; r=httpx.get('http://localhost:8000/api/v1/health'); exit(0 if r.status_code == 200 else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3

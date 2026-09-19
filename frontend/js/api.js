@@ -84,7 +84,7 @@ class SimorghAPI {
     return this.request(endpoint, { method: 'DELETE' });
   }
 
-  // Authentication
+  // Authentication - API Key (for backward compatibility and machine auth)
   async login(apiKey) {
     // Validate API key by making a test request
     const testKey = this.apiKey;
@@ -104,8 +104,47 @@ class SimorghAPI {
     }
   }
 
+  // Authentication - Email/Password (for human users)
+  async loginWithEmail(email, password) {
+    const response = await fetch(`${this.baseURL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Login failed' }));
+      throw new APIError(error.detail || `HTTP ${response.status}`, response.status);
+    }
+    
+    const data = await response.json();
+    
+    // Store session token and user info
+    if (data.access_token) {
+      localStorage.setItem('simorgh_session_token', data.access_token);
+      localStorage.setItem('simorgh_user', JSON.stringify(data.user || {}));
+      // Also set as API key for subsequent requests (session-based auth)
+      this.setApiKey(data.access_token);
+    }
+    
+    return { success: true, user: data.user };
+  }
+
   logout() {
     this.clearApiKey();
+    localStorage.removeItem('simorgh_session_token');
+    localStorage.removeItem('simorgh_user');
+  }
+
+  isAuthenticated() {
+    return !!(this.apiKey || localStorage.getItem('simorgh_api_key') || localStorage.getItem('simorgh_session_token'));
+  }
+
+  getCurrentUser() {
+    const userStr = localStorage.getItem('simorgh_user');
+    return userStr ? JSON.parse(userStr) : null;
   }
 
   // Applications

@@ -35,6 +35,20 @@ def verify_secret(secret: str, secret_hash: str) -> bool:
         return False
 
 
+def hash_password(password: str) -> str:
+    """Hash a password using Argon2."""
+    return password_hasher.hash(password)
+
+
+def verify_password(password: str, password_hash: str) -> bool:
+    """Verify a password against its hash."""
+    try:
+        password_hasher.verify(password_hash, password)
+        return True
+    except (VerifyMismatchError, InvalidHash):
+        return False
+
+
 def create_access_token(
     data: Dict[str, Any],
     expires_delta: Optional[timedelta] = None,
