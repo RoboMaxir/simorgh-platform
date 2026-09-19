@@ -75,8 +75,14 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
 
-    async def run(connection: Connection) -> None:
-        await connection.run_sync(context.run_migrations)
+    def run(connection: Connection) -> None:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+        )
+        with context.begin_transaction():
+            context.run_migrations()
 
     async def main() -> None:
         async with connectable.connect() as connection:
