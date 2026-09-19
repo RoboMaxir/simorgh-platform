@@ -1,2 +1,0 @@
-[console_scripts]
-simorgh-platform = app.main:main

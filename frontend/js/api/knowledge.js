@@ -1,0 +1,1 @@
+import{api}from "./client.js";export const knowledge={index:()=>api.post("/knowledge/index",{}),search:()=>api.post("/knowledge/search",{}),document:id=>api.get("/knowledge/documents/"+encodeURIComponent(id))};

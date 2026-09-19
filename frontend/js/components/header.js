@@ -1,0 +1,1 @@
+export function mobileButton(){return '<button class="btn mobile-menu" id="mobile-menu">Menu</button>'}

@@ -1,0 +1,1 @@
+import{api}from "./client.js";export const audit={events:()=>api.get("/audit/events")};
