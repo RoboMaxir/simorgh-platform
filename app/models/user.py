@@ -32,7 +32,12 @@ class User(Base, UUIDMixin, TimestampMixin):
 
     # Relationships
     workspace = relationship("Workspace", backref="users")
-    user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
+    user_roles = relationship(
+        "UserRole",
+        back_populates="user",
+        foreign_keys="UserRole.user_id",
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
