@@ -1,0 +1,1 @@
+import{api}from "./client.js";import{setSession}from "../state.js";export async function login(email,password){const d=await api.post("/auth/login",{email,password});setSession(d);return d}

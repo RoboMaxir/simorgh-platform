@@ -1,0 +1,1 @@
+import{api}from "./client.js";export const ai={usage:()=>api.get("/ai/usage"),models:()=>api.get("/ai/models"),providers:()=>api.get("/ai/providers")};
